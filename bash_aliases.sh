@@ -30,19 +30,21 @@ alias grr='grep -Ri'
 alias {tsgen,gents}=generate_timesheet
 
 # git aliases
-alias gdno='git diff --name-only'
-alias gd='git diff'
-alias gc='git checkout'
-alias gcb='git checkout -b'
 alias gs='git status'
+alias gb='git branch'
+alias gc='git checkout'
+alias gd='git diff'
+alias gdno='git diff --name-only'
+alias gp='git pull'
 
 # setup autocompletion
 if [ -f "/usr/share/bash-completion/completions/git" ]; then
   source /usr/share/bash-completion/completions/git
-  __git_complete gdno _git_diff
-  __git_complete gd _git_diff
+  __git_complete gb _git_branch
   __git_complete gc _git_checkout
-  __git_complete gcb _git_checkout
+  __git_complete gd _git_diff
+  __git_complete gdno _git_diff
+  __git_complete gp _git_pull
 else
   echo "Error loading git completions"
 fi
