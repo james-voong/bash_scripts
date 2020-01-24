@@ -12,16 +12,21 @@ function generate_timesheet() (
     friday=$(date -dfriday +%Y%m%d)
     if [ ${monday} -gt ${friday} ]; then
         monday=$(date -dmonday-1week +%Y%m%d)
+        previoustimesheet=$(date -dmonday-2week +%Y%m%d)-$(date -dfriday-1week +%Y%m%d)
+    else
+        previoustimesheet=$(date -dmonday-1week +%Y%m%d)-$(date -dfriday-1week +%Y%m%d)
     fi
+
     if [ -f ~/timesheets/${monday}-${friday} ]; then
         echo "Timesheet already generated."
         exit 0;
     fi
-    previoustimesheet=$(date -dmonday-1week +%Y%m%d)-$(date -dfriday-1week +%Y%m%d)
+
     if [ -f ~/timesheets/${previoustimesheet} ]; then
         mv ~/timesheets/${previoustimesheet} ~/timesheets/archive
         echo "${previoustimesheet} moved to archive."
     fi
+
     tks -t week > ~/timesheets/${monday}-${friday}
     echo "Timesheet ${monday}-${friday} generated."
 )
