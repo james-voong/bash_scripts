@@ -31,8 +31,12 @@ function generate_timesheet() (
     echo "Timesheet ${monday}-${friday} generated."
 )
 
+# Aliases
 alias grr='grep -Ri'
+alias keyboard='g810-led -fx hwave all 10'
 alias {tsgen,gents}=generate_timesheet
+alias dockips="docker ps -q | xargs -n 1 docker inspect --format '{{.Name }} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' | sed 's/^\///'"
+alias shell='inv db.shell'
 
 # git aliases
 alias gs='git status'
@@ -53,3 +57,58 @@ if [ -f "/usr/share/bash-completion/completions/git" ]; then
 else
   echo "Error loading git completions"
 fi
+
+# aliases for common typos:
+alias les='less'
+
+# Purge my cache.
+function purgecache() {
+    if [ "$#" -ne 1 ]; then
+        echo "Master, you must give me exactly 1 parameter."
+        return
+    fi
+    docker exec -it ${1} php /var/www/html/admin/cli/purge_caches.php
+}
+
+# Release management related functions.
+alias release="cat ~/dev/eumetadata/[0-9]*.json | jq -r '.sites[]|select(.project_team==\"MI6\")|.environments.production.url'"
+
+# Allows you to give multiple WRs as params to deployment_script.py
+function deployment() {
+    if [ "$#" -lt 1 ]; then
+        echo "Need more params. Exited."
+        return
+    fi
+    for deploymentnumber in "$@"
+        do
+            python3 ~/dev/wrmsapi/deployment_script.py $deploymentnumber
+    done
+
+}
+
+# Locate partial filename recursively.
+function locate() {
+    if [ "$#" -ne 1 ]; then
+        echo "Probably not what you want to run."
+        return
+    fi
+
+    find . -iname "*${1}*"
+}
+
+# Install codechecker.
+function codechecker_install() {
+    git submodule add git@github.com:moodlehq/moodle-local_codechecker.git local/codechecker
+    if [ $? -ne 0 ]; then
+        return
+    fi
+    git reset .gitmodules local/codechecker
+
+}
+
+alias pierlogs='ssh piers "cd /var/log/sitelogs; bash"'
+alias pierdbs='ssh piers "cd /var/backup/db-backups; bash"'
+
+# To find instances:
+# Run aws ec2 describe-instances
+# Look through JSON for your instance.
