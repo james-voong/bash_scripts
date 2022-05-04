@@ -1,42 +1,7 @@
-## penguin ~/.bash_aliases file for user
-# User specific alises and functions
+## laplace ~/.bash_aliases file for user
 
-# Function definitions.
-# Custom functions are in this file.
-if [ -f ~/.bash_functions ]; then
-    . ~/.bash_functions
-fi
-
-function generate_timesheet() (
-    monday=$(date -dmonday +%Y%m%d)
-    friday=$(date -dfriday +%Y%m%d)
-    if [ ${monday} -gt ${friday} ]; then
-        monday=$(date -dmonday-1week +%Y%m%d)
-        previoustimesheet=$(date -dmonday-2week +%Y%m%d)-$(date -dfriday-1week +%Y%m%d)
-    else
-        previoustimesheet=$(date -dmonday-1week +%Y%m%d)-$(date -dfriday-1week +%Y%m%d)
-    fi
-
-    if [ -f ~/timesheets/${monday}-${friday} ]; then
-        echo "Timesheet already generated."
-        exit 0;
-    fi
-
-    if [ -f ~/timesheets/${previoustimesheet} ]; then
-        mv ~/timesheets/${previoustimesheet} ~/timesheets/archive
-        echo "${previoustimesheet} moved to archive."
-    fi
-
-    tks -t week > ~/timesheets/${monday}-${friday}
-    echo "Timesheet ${monday}-${friday} generated."
-)
-
-# Aliases
-alias grr='grep -Ri'
-alias keyboard='g810-led -fx hwave all 10'
-alias {tsgen,gents}=generate_timesheet
-alias dockips="docker ps -q | xargs -n 1 docker inspect --format '{{.Name }} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' | sed 's/^\///'"
-alias shell='inv db.shell'
+# Keyboard colour
+g810-led -fx hwave all 10
 
 # git aliases
 alias gs='git status'
@@ -44,7 +9,7 @@ alias gb='git branch'
 alias gc='git checkout'
 alias gd='git diff'
 alias gdno='git diff --name-only'
-alias gp='git pull'
+alias gf='git fetch origin'
 
 # setup autocompletion
 if [ -f "/usr/share/bash-completion/completions/git" ]; then
@@ -53,38 +18,9 @@ if [ -f "/usr/share/bash-completion/completions/git" ]; then
   __git_complete gc _git_checkout
   __git_complete gd _git_diff
   __git_complete gdno _git_diff
-  __git_complete gp _git_pull
 else
   echo "Error loading git completions"
 fi
-
-# aliases for common typos:
-alias les='less'
-
-# Purge my cache.
-function purgecache() {
-    if [ "$#" -ne 1 ]; then
-        echo "Master, you must give me exactly 1 parameter."
-        return
-    fi
-    docker exec -it ${1} php /var/www/html/admin/cli/purge_caches.php
-}
-
-# Release management related functions.
-alias release="cat ~/dev/eumetadata/[0-9]*.json | jq -r '.sites[]|select(.project_team==\"MI6\")|.environments.production.url'"
-
-# Allows you to give multiple WRs as params to deployment_script.py
-function deployment() {
-    if [ "$#" -lt 1 ]; then
-        echo "Need more params. Exited."
-        return
-    fi
-    for deploymentnumber in "$@"
-        do
-            python3 ~/dev/wrmsapi/deployment_script.py $deploymentnumber
-    done
-
-}
 
 # Locate partial filename recursively.
 function locate() {
@@ -96,19 +32,32 @@ function locate() {
     find . -iname "*${1}*"
 }
 
-# Install codechecker.
-function codechecker_install() {
-    git submodule add git@github.com:moodlehq/moodle-local_codechecker.git local/codechecker
-    if [ $? -ne 0 ]; then
-        return
-    fi
-    git reset .gitmodules local/codechecker
+# Other aliases
+alias grr='grep -Ri'
+alias less='/usr/share/vim/vim81/macros/less.sh'
 
-}
+# vagrant aliases
+alias vagrantup='cd ~/dev/vagrant/builds/local && vagrant up && cd -'
+alias vagrantconnect='cd ~/dev/vagrant/builds/local && vagrant ssh'
 
-alias pierlogs='ssh piers "cd /var/log/sitelogs; bash"'
-alias pierdbs='ssh piers "cd /var/backup/db-backups; bash"'
+alias config='vim ~/dev/dockerised/config_files/app/config.php'
 
-# To find instances:
-# Run aws ec2 describe-instances
-# Look through JSON for your instance.
+# Set up my cd path
+export CDPATH=".:$HOME:$HOME/dev"
+
+# Show custom path colours in terminal
+export PS1='\[\033[01;36m\]\u\[\033[m\]@\[\033[01;32m\]\H:\w$ \[\033[m\]'
+
+# Docker aliases
+alias webip="docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' web_container"
+alias dbip="docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' db_container"
+alias web='docker exec -it web_container bash'
+alias db='docker exec -it db_container mysql -pPasswordGoesHere -D local'
+alias up='cd ~/dev/dockerised && docker-compose stop && docker-compose up -d && cd -'
+alias go='cd ~/dev/dockerised && docker-compose up -d'
+
+# Vue aliases
+alias vuedev="cd ~/dev/citizenticket/vue/ && npm run dev"
+alias vuebuild="cd ~/dev/citizenticket/vue/ && npm run build"
+
+export LOCAL_IP=$(hostname -I | cut -d ' ' -f1)
